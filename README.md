@@ -61,6 +61,37 @@ git commit -m "o que mudou"
 git push
 ```
 
+### Disponibilizar para a equipe (GitHub Pages) — recomendado
+
+Hoje, para usar a ferramenta, é preciso ter os arquivos na máquina. Como o
+repositório é público e a aplicação é estática, o GitHub pode hospedá-la de
+graça, num endereço que qualquer pessoa da equipe abre pelo navegador — sem
+instalar nada, sem rodar `serve.ps1`.
+
+**Ainda não está habilitado.** Para ligar (uma vez só):
+
+1. Abra <https://github.com/RafaelAlves-Fermentech/calculadora-conversao-moeda/settings/pages>
+2. Em **Source**, escolha **Deploy from a branch**
+3. Em **Branch**, escolha `main` e a pasta `/ (root)`
+4. **Save**
+
+Em cerca de um minuto a ferramenta estará em:
+
+```
+https://rafaelalves-fermentech.github.io/calculadora-conversao-moeda/
+```
+
+A partir daí, todo `git push` neste repositório atualiza o endereço
+automaticamente. E como a cotação é buscada ao vivo pelo navegador de cada
+pessoa, a página publicada mostra sempre o boletim mais recente — sem
+republicar nada.
+
+> Vale reforçar: o GitHub Pages exige repositório público na conta gratuita. Não
+> há problema de sigilo aqui — a ferramenta não guarda credenciais, chaves nem
+> dados de clientes, e consulta apenas um endpoint público do Banco Central. Se
+> preferir manter tudo restrito, a alternativa é copiar a pasta para um
+> compartilhamento de rede interno e abrir o `index.html`.
+
 ### Convenções do repositório
 
 | Item | Definição |
