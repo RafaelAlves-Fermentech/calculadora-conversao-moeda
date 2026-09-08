@@ -1,4 +1,4 @@
-# Servidor estático mínimo para uso local e testes.
+﻿# Servidor estático mínimo para uso local e testes.
 #
 # Uso:  powershell -ExecutionPolicy Bypass -File serve.ps1
 # Depois abra  http://localhost:8124/

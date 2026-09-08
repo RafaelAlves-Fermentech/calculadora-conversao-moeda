@@ -1,4 +1,4 @@
-# Publica no GitHub as alterações feitas no projeto.
+﻿# Publica no GitHub as alterações feitas no projeto.
 #
 # Uso:
 #   powershell -ExecutionPolicy Bypass -File publicar.ps1 "descrição da mudança"
