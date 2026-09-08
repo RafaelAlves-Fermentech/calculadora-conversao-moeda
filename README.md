@@ -29,6 +29,51 @@ método antigo — que funciona, mas é menos garantido conforme o navegador.
 
 ---
 
+## Repositório e publicação
+
+<https://github.com/RafaelAlves-Fermentech/calculadora-conversao-moeda>
+
+### A cotação NÃO exige atualização diária do repositório
+
+Vale insistir neste ponto, porque é contraintuitivo: **não existe nenhum arquivo
+de cotação neste projeto.**
+
+A página consulta o Banco Central **ao vivo, no navegador de quem a abre**. Quem
+abrir a ferramenta amanhã de manhã verá o boletim de amanhã, sem que ninguém
+tenha commitado coisa alguma. Não há rotina diária, não há tarefa agendada, não
+há arquivo a regravar.
+
+O repositório só muda quando **o código** muda — um ajuste na interface, uma
+moeda nova, uma correção.
+
+### Como publicar uma alteração
+
+```bash
+powershell -ExecutionPolicy Bypass -File publicar.ps1 "o que mudou"
+```
+
+O script confere se há algo a publicar, mostra os arquivos alterados, cria o
+commit e envia. Se preferir os comandos diretos:
+
+```bash
+git add -A
+git commit -m "o que mudou"
+git push
+```
+
+### Convenções do repositório
+
+| Item | Definição |
+|---|---|
+| Branch principal | `main` |
+| Fim de linha | LF no repositório, CRLF nos `.ps1` locais (`.gitattributes`) |
+| Fora do versionamento | `.claude/`, logs, temporários, `node_modules/` (`.gitignore`) |
+
+Nada sensível é versionado: a ferramenta não tem credenciais, chaves, senhas nem
+dados de clientes — só consulta um endpoint público do Banco Central.
+
+---
+
 ## Fonte das cotações
 
 Página de referência ao usuário:
