@@ -41,6 +41,14 @@
   --line:     #DDE4E6;
   --line-soft:#EBF0F1;
 
+  /* Superfícies internas: o campo de valor, os cartões de cotação, o chip. */
+  --surface:     #FBFCFD;
+  --surface-2:   #EDF1F2;   /* botão de limpar */
+  --surface-2h:  #E2E8EA;   /* o mesmo, sob o cursor */
+  --placeholder: #B6BEC1;
+  --warn-line:   #EBD9AE;
+  --danger-line: #F0CFCC;
+
   --danger:      #B3261E;
   --danger-tint: #FCEEED;
   --warn:        #8A5A00;
@@ -55,6 +63,81 @@
 
   --shadow-sm: 0 1px 2px rgba(18,38,42,.06), 0 1px 1px rgba(18,38,42,.04);
   --shadow-md: 0 2px 4px rgba(18,38,42,.05), 0 8px 24px rgba(18,38,42,.06);
+
+  /* Gradiente do cartão de resultado e cor do texto sobre ele. */
+  --result-de:   #005E67;
+  --result-para: #004B53;
+  --result-borda:#004B53;
+}
+
+/* ------------------------------------------------------ aparência escura -- */
+/*
+   Só os tokens mudam: nenhuma regra de componente é reescrita mais abaixo,
+   porque todas leem estas variáveis.
+
+   O turquesa e o laranja institucionais são escuros demais para carregar
+   texto sobre fundo escuro, então aqui eles ganham versões mais claras — a
+   marca continua reconhecível e o texto continua legível. O laranja cheio
+   (#E57200) permanece no botão Converter, onde é fundo e não texto.
+
+   Todos os pares de cor deste bloco foram medidos na página renderizada e
+   passam no WCAG AA.
+*/
+:root[data-theme="dark"] {
+  --teal:        #3EA9B5;   /* acentos, foco, bordas ativas */
+  --teal-dark:   #6FC9D3;   /* texto turquesa sobre cartão escuro */
+  --teal-deeper: #8AD7DF;
+  --teal-tint:   #122E33;   /* fundos sutis */
+  --teal-line:   #2C4F56;
+
+  --orange:      #E57200;   /* fundo do botão principal: mantém a marca */
+  --orange-dark: #F2860F;
+  --orange-deep: #F0A45C;   /* texto pequeno em laranja */
+  --orange-tint: #2E2113;
+
+  --ink:      #E9EEEF;
+  --ink-2:    #BDC8CB;
+  --gray:     #7E888C;
+  --gray-text:#A6B0B3;
+
+  --paper:    #0F1719;
+  --card:     #172326;
+  --line:     #2B3A3E;
+  --line-soft:#233135;
+
+  --surface:     #1B292D;
+  --surface-2:   #26363A;
+  --surface-2h:  #304247;
+  --placeholder: #6B7679;
+  --warn-line:   #5A4A1E;
+  --danger-line: #5C2E29;
+
+  --danger:      #FF9E95;
+  --danger-tint: #341917;
+  --warn:        #F0C265;
+  --warn-tint:   #2F2611;
+
+  /* Sombras não funcionam no escuro: viram vulto. O relevo vem das bordas. */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.34);
+  --shadow-md: 0 2px 6px rgba(0,0,0,.36), 0 10px 28px rgba(0,0,0,.28);
+
+  /* O cartão de resultado precisa ficar MAIS claro que o fundo para manter o
+     destaque — no tema claro ele escurece, aqui ele acende.
+     O tom é o ponto de equilíbrio entre destacar do fundo (#0F1719) e ainda
+     sustentar o texto branco translúcido que vive sobre ele: um turquesa mais
+     vivo derrubava o rótulo e a nota do boletim abaixo da AA. */
+  --result-de:   #0A6570;
+  --result-para: #07505A;
+  --result-borda:#10707E;
+}
+
+/* Durante a troca de aparência, nenhuma transição roda (ver src/theme.js).
+   A classe é posta e retirada no mesmo instante da troca. */
+:root.trocando-tema,
+:root.trocando-tema *,
+:root.trocando-tema *::before,
+:root.trocando-tema *::after {
+  transition: none !important;
 }
 
 /* ----------------------------------------------------------------- reset -- */
@@ -106,6 +189,11 @@ button { cursor: pointer; }
 }
 .masthead-id { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .masthead-logo { display: block; width: 122px; height: auto; flex: none; }
+
+/* Uma versão da marca por vez, conforme a aparência. */
+.logo-escuro { display: none; }
+:root[data-theme="dark"] .logo-claro { display: none; }
+:root[data-theme="dark"] .logo-escuro { display: block; }
 .masthead-divider {
   width: 1px; align-self: stretch; margin: 4px 0;
   background: var(--line); flex: none;
@@ -120,7 +208,7 @@ button { cursor: pointer; }
 .source-chip {
   display: flex; flex-direction: column; gap: 1px;
   padding: 6px 13px; border: 1px solid var(--line); border-radius: var(--r-sm);
-  background: #FBFCFC;
+  background: var(--surface);
 }
 .source-chip-label {
   font-size: 9px; font-weight: 700; letter-spacing: .14em;
@@ -128,12 +216,31 @@ button { cursor: pointer; }
 }
 .source-chip-value { font-size: 12px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 
+/* ------------------------------------------------- botão de aparência (§12) -- */
+.btn-theme {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; flex: none;
+  background: var(--card); color: var(--ink-2);
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  transition: border-color .15s ease, color .15s ease;
+}
+.btn-theme:hover { background: var(--teal-tint); border-color: var(--teal-line); color: var(--teal-dark); }
+
+/* Cada aparência mostra o ícone do destino: no claro, a lua (ir para o
+   escuro); no escuro, o sol. Os dois ícones ocupam a mesma célula do grid,
+   então a troca não desloca nada ao redor. */
+.btn-theme svg { grid-area: 1 / 1; transition: opacity .18s ease, transform .18s ease; }
+.icone-sol { opacity: 0; transform: rotate(-90deg) scale(.6); }
+.icone-lua { opacity: 1; transform: none; }
+:root[data-theme="dark"] .icone-sol { opacity: 1; transform: none; }
+:root[data-theme="dark"] .icone-lua { opacity: 0; transform: rotate(90deg) scale(.6); }
+
 .btn-refresh {
   display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px;
   background: var(--card); color: var(--teal-dark);
   border: 1px solid var(--teal-line); border-radius: var(--r-sm);
   font-size: 13.5px; font-weight: 600; white-space: nowrap;
-  transition: background .15s ease, border-color .15s ease;
+  transition: border-color .15s ease, color .15s ease;
 }
 .btn-refresh:hover:not(:disabled) { background: var(--teal-tint); border-color: var(--teal); }
 .btn-refresh:disabled { opacity: .6; cursor: progress; }
@@ -161,11 +268,11 @@ main { padding: 26px 0 60px; }
 .notice.is-info { border-color: var(--teal-line); border-left-color: var(--teal); background: var(--teal-tint); }
 .notice.is-info .notice-icon { color: var(--teal-dark); }
 
-.notice.is-warn { border-color: #EBD9AE; border-left-color: var(--warn); background: var(--warn-tint); }
+.notice.is-warn { border-color: var(--warn-line); border-left-color: var(--warn); background: var(--warn-tint); }
 .notice.is-warn .notice-icon { color: var(--warn); }
 .notice.is-warn .notice-icon::before { content: '!'; }
 
-.notice.is-error { border-color: #F0CFCC; border-left-color: var(--danger); background: var(--danger-tint); }
+.notice.is-error { border-color: var(--danger-line); border-left-color: var(--danger); background: var(--danger-tint); }
 .notice.is-error .notice-icon { color: var(--danger); }
 .notice.is-error .notice-icon::before { content: '!'; }
 
@@ -215,10 +322,10 @@ label, .field-label {
 .amount-box {
   display: flex; align-items: center; gap: 10px;
   height: 66px; padding: 0 14px 0 16px;
-  background: #FBFCFD;
+  background: var(--surface);
   border: 1.5px solid var(--line);
   border-radius: var(--r);
-  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 .amount-box:focus-within {
   border-color: var(--teal); background: var(--card);
@@ -234,16 +341,16 @@ label, .field-label {
   font-family: var(--font-num); font-size: 30px; font-weight: 500;
   letter-spacing: -.01em; color: var(--ink);
 }
-#amount::placeholder { color: #B6BEC1; font-weight: 400; }
+#amount::placeholder { color: var(--placeholder); font-weight: 400; }
 #amount:disabled { cursor: not-allowed; }
 
 .amount-clear {
   flex: none; display: grid; place-items: center;
   width: 32px; height: 32px; border-radius: 50%;
-  border: 0; background: #EDF1F2; color: var(--gray-text);
-  transition: background .14s ease, color .14s ease;
+  border: 0; background: var(--surface-2); color: var(--gray-text);
+  transition: color .14s ease;
 }
-.amount-clear:hover { background: #E2E8EA; color: var(--ink); }
+.amount-clear:hover { background: var(--surface-2h); color: var(--ink); }
 
 .field-hint { font-size: 12px; color: var(--gray-text); margin-top: 7px; }
 
@@ -281,7 +388,7 @@ label, .field-label {
   border-radius: 50%;
   background: var(--teal); color: #fff; border: 0;
   box-shadow: 0 2px 6px rgba(0,118,129,.28);
-  transition: background .15s ease, transform .15s ease;
+  transition: transform .15s ease;
 }
 .swap:hover:not(:disabled) { background: var(--teal-dark); transform: translateY(-1px); }
 .swap:active:not(:disabled) { transform: translateY(0); }
@@ -299,7 +406,7 @@ label, .field-label {
   /* 19px/700 qualifica como texto grande: AA pede 3:1, o par rende 3,1:1. */
   font-size: 19px; font-weight: 700; letter-spacing: .01em;
   box-shadow: 0 2px 6px rgba(229,114,0,.26);
-  transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
+  transition: box-shadow .15s ease, transform .12s ease;
 }
 .btn-convert:hover:not(:disabled) {
   background: var(--orange-dark); box-shadow: 0 3px 10px rgba(229,114,0,.32);
@@ -314,18 +421,18 @@ label, .field-label {
   background: var(--teal-tint);
   border: 1px solid var(--teal-line);
   text-align: center;
-  transition: background .2s ease, border-color .2s ease;
+  transition: border-color .2s ease;
 }
 .result.has-value {
-  background: linear-gradient(160deg, var(--teal-dark) 0%, var(--teal-deeper) 100%);
-  border-color: var(--teal-deeper);
+  background: linear-gradient(160deg, var(--result-de) 0%, var(--result-para) 100%);
+  border-color: var(--result-borda);
 }
 
 .result-empty { font-size: 14.5px; color: var(--ink-2); padding: 12px 0; }
 
 .result-source {
   font-family: var(--font-num); font-size: 16px; font-weight: 400;
-  color: rgba(255,255,255,.78);
+  color: rgba(255,255,255,.88);
 }
 .result-arrow { display: block; color: rgba(255,255,255,.5); margin: 2px 0; }
 
@@ -352,7 +459,7 @@ label, .field-label {
   letter-spacing: .14em; text-transform: uppercase;
   /* .68 rendia 4,39:1 sobre a parada mais clara do gradiente — abaixo da AA
      para texto pequeno. .82 leva a 5,4:1 sem perder a hierarquia. */
-  color: rgba(255,255,255,.82); margin-bottom: 5px;
+  color: rgba(255,255,255,.9); margin-bottom: 5px;
 }
 .result-rate-value {
   display: block; font-family: var(--font-num);
@@ -360,7 +467,7 @@ label, .field-label {
 }
 .result-rate-note {
   display: block; font-family: var(--font-num);
-  font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 6px;
+  font-size: 12.5px; color: rgba(255,255,255,.86); margin-top: 6px;
 }
 
 .btn-copy {
@@ -369,11 +476,13 @@ label, .field-label {
   background: rgba(255,255,255,.1); color: #fff;
   border: 1px solid rgba(255,255,255,.34); border-radius: var(--r-sm);
   font-size: 13px; font-weight: 600;
-  transition: background .15s ease, border-color .15s ease;
+  transition: border-color .15s ease;
 }
 .btn-copy:hover { background: rgba(255,255,255,.2); }
 .btn-copy:focus-visible { outline-color: #fff; }
-.btn-copy.is-done { background: #fff; color: var(--teal-dark); border-color: #fff; }
+/* O fundo aqui é branco fixo nas duas aparências, então o texto precisa de um
+   turquesa escuro fixo — --teal-dark clareia no tema escuro e sumiria. */
+.btn-copy.is-done { background: #fff; color: #005E67; border-color: #fff; }
 .btn-copy.is-failed { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.6); }
 
 /* =========================================================================
@@ -398,7 +507,7 @@ label, .field-label {
 
 .rate-card {
   border: 1px solid var(--line-soft); border-radius: var(--r-sm);
-  background: #FBFCFD; padding: 14px 16px;
+  background: var(--surface); padding: 14px 16px;
 }
 .rate-card.is-empty { background: var(--paper); }
 
@@ -423,7 +532,7 @@ label, .field-label {
 .rate-date-badge {
   font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
   padding: 3px 7px; border-radius: 4px;
-  background: var(--warn-tint); color: var(--warn); border: 1px solid #EBD9AE;
+  background: var(--warn-tint); color: var(--warn); border: 1px solid var(--warn-line);
 }
 .rate-date-badge.is-today {
   background: var(--teal-tint); color: var(--teal-dark); border-color: var(--teal-line);
@@ -518,9 +627,13 @@ label, .field-label {
     min-height: 0; gap: 10px; flex-wrap: nowrap;
     padding-top: 10px; padding-bottom: 10px;
   }
-  .masthead-id { gap: 11px; flex: 1; }
-  .masthead-logo { width: 92px; }
-  .masthead h1 { font-size: 16px; }
+  /* Com dois botões de ícone à direita, o cabeçalho no celular fica com
+     ~343px para dividir. O divisor sai e a marca encolhe para que o título
+     caiba numa linha só — quebrado em duas ele desalinha do logo. */
+  .masthead-id { gap: 10px; flex: 1; min-width: 0; }
+  .masthead-logo { width: 78px; }
+  .masthead-divider { display: none; }
+  .masthead h1 { font-size: 15px; }
   .masthead-sub { display: none; }
 
   /* A fonte dos dados continua explícita no painel de cotações e no rodapé;
@@ -529,8 +642,9 @@ label, .field-label {
 
   /* O botão vira só o ícone para o título caber em uma linha. O rótulo
      continua no leitor de tela, e o ícone girando avisa que está consultando. */
-  .masthead-actions { gap: 8px; flex: none; }
-  .btn-refresh { padding: 0 11px; }
+  .masthead-actions { gap: 6px; flex: none; }
+  .btn-refresh { padding: 0 10px; }
+  .btn-theme { width: 38px; }
   .btn-refresh #refreshLabel {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;

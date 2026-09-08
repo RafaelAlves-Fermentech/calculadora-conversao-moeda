@@ -29,6 +29,37 @@ método antigo — que funciona, mas é menos garantido conforme o navegador.
 
 ---
 
+## Aparência clara e escura
+
+O botão de sol/lua no cabeçalho alterna entre as duas aparências. A escolha fica
+guardada no navegador e vale para as próximas visitas.
+
+**Quem nunca escolheu segue o sistema operacional.** Se o Windows (ou o celular)
+está no modo escuro, a ferramenta abre escura; se o sistema trocar com a página
+aberta, ela acompanha. A partir do primeiro clique no botão, a preferência
+manual passa a mandar.
+
+Como isso é feito:
+
+| Peça | Papel |
+|---|---|
+| Script embutido no `<head>` do `index.html` | Aplica a aparência **antes de a página desenhar**, para a tela não piscar branca em quem usa o modo escuro |
+| `src/theme.js` | Botão, persistência e acompanhamento do sistema |
+| `:root[data-theme="dark"]` no CSS | Redefine **só os tokens** — nenhuma regra de componente é reescrita |
+| `assets/fermentech-branco.png` | Versão da marca para fundo escuro (a colorida não se lê ali) |
+
+O contraste foi medido na página renderizada, elemento por elemento, **nas duas
+aparências**: 33 pares de texto e fundo em cada, todos aprovados no WCAG AA.
+
+> **Detalhe de implementação que vale saber, se for mexer no CSS:** nenhuma
+> transição anima `background` ou `color`, e `src/theme.js` força um recálculo
+> de estilo ao trocar de tema. Isso não é preciosismo — sem essas duas medidas,
+> as propriedades cujo valor vem de uma variável (`background: var(--card)`)
+> congelavam na cor do tema anterior até a página ser recarregada. O defeito
+> aparecia no campo de valor e nos botões do cabeçalho.
+
+---
+
 ## Repositório e publicação
 
 <https://github.com/RafaelAlves-Fermentech/calculadora-conversao-moeda>
@@ -253,6 +284,8 @@ API BCB (Olinda / PTAX)
        └─ src/cache.js    validade por situação (localStorage)
             └─ src/converter.js   cálculo puro
                  └─ src/app.js    estado e interface
+
+src/theme.js   aparência clara/escura, independente das camadas acima
 ```
 
 | Arquivo | Responsabilidade |
@@ -264,6 +297,7 @@ API BCB (Olinda / PTAX)
 | `src/bcb-service.js` | Acesso ao Banco Central, leitura da resposta |
 | `src/converter.js` | **Lógica de conversão** e validação |
 | `src/history.js` | Conversões recentes (localStorage) |
+| `src/theme.js` | Aparência clara/escura |
 | `src/app.js` | Interface, estado, eventos |
 | `assets/styles.css` | Folha de estilo única |
 | `index.html` | Estrutura da página |
@@ -382,12 +416,21 @@ avisada), falha de apenas uma moeda, e recuperação pelo "Tentar novamente".
 inversão recalculando na hora; cópia com retorno visual; histórico persistindo
 entre recargas.
 
+**Aparência clara/escura** — seis trocas seguidas conferindo, a cada uma, o
+fundo e a cor de texto dos elementos que congelavam; carga direta em cada tema;
+persistência entre recargas; leitura da preferência do sistema; troca do logo. As
+conversões e a máscara do campo foram reconferidas depois de tudo, sem regressão.
+
 **Responsividade** — 375×812 (celular), 768×1024 (tablet) e 1280×800 (desktop),
-sem rolagem horizontal em nenhuma; alvos de toque de 48px no celular.
+sem rolagem horizontal em nenhuma; alvos de toque de 48px no celular. No celular
+o cabeçalho foi reajustado para acomodar o botão de aparência sem quebrar o
+título em duas linhas.
 
 **Acessibilidade** — rótulo em todos os campos, ordem de tabulação lógica, nome
 acessível em todos os botões, regiões `aria-live` para resultado e avisos,
-`lang="pt-BR"`, landmarks semânticos. Contraste medido na página renderizada:
+`lang="pt-BR"`, landmarks semânticos. O botão de aparência é um interruptor com
+`aria-pressed` e rótulo que descreve a ação. Contraste medido na página
+renderizada, **nas duas aparências** (33 pares de texto e fundo em cada):
 **todos os textos passam no WCAG AA** (mínimo encontrado: 3,12:1 no botão
 Converter, que qualifica como texto grande a 19px/700, onde a exigência é 3:1).
 
