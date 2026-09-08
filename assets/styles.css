@@ -1,0 +1,594 @@
+/* ==========================================================================
+   Conversor de Moedas — Fermentech
+   Folha de estilo única (§25: sem framework, sem build, sem dependências).
+
+   Identidade (§12): turquesa #007681 conduz a interface, laranja #E57200
+   marca a ação principal e o cinza #75787B fica com a informação auxiliar.
+   Fundo claro, cartões brancos, cor usada com parcimônia.
+
+   Tipografia: Archivo na interface, IBM Plex Mono em todo número — valor,
+   cotação e resultado são cifras de boletim e são tratadas como tais. É a
+   mesma dupla do painel "Histórico de Cotações", para que as duas
+   ferramentas internas se reconheçam como parentes.
+
+   Contraste (§24): o laranja institucional sobre branco rende 3,1:1, então
+   ele só aparece atrás de texto grande e negrito (o botão Converter, 19px/700,
+   onde a AA exige 3:1). Para texto pequeno em laranja usa-se --orange-deep,
+   que rende 5,3:1. Cinza pequeno usa --gray-text (5,5:1) em vez do
+   institucional --gray (4,4:1), reservado a traços e rótulos maiores.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens -- */
+:root {
+  --teal:        #007681;
+  --teal-dark:   #005E67;
+  --teal-deeper: #004B53;
+  --teal-tint:   #E6F1F2;
+  --teal-line:   #B9D6DA;
+
+  --orange:      #E57200;
+  --orange-dark: #C56200;
+  --orange-deep: #A85400;   /* texto pequeno em laranja */
+  --orange-tint: #FDF1E4;
+
+  --ink:      #12262A;
+  --ink-2:    #3E5054;
+  --gray:     #75787B;      /* cor institucional: traços e rótulos */
+  --gray-text:#656A6D;      /* texto auxiliar pequeno */
+
+  --paper:    #F1F4F5;
+  --card:     #FFFFFF;
+  --line:     #DDE4E6;
+  --line-soft:#EBF0F1;
+
+  --danger:      #B3261E;
+  --danger-tint: #FCEEED;
+  --warn:        #8A5A00;
+  --warn-tint:   #FDF5E3;
+
+  --font-ui:  'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-num: 'IBM Plex Mono', ui-monospace, SFMono-Regular, 'Cascadia Mono', Consolas, monospace;
+
+  --r:    10px;
+  --r-sm: 7px;
+  --r-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(18,38,42,.06), 0 1px 1px rgba(18,38,42,.04);
+  --shadow-md: 0 2px 4px rgba(18,38,42,.05), 0 8px 24px rgba(18,38,42,.06);
+}
+
+/* ----------------------------------------------------------------- reset -- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+
+.wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: 12px; top: -48px; z-index: 50;
+  background: var(--teal); color: #fff; padding: 9px 14px;
+  border-radius: var(--r-sm); font-size: 13px; font-weight: 600; text-decoration: none;
+  transition: top .16s ease;
+}
+.skip-link:focus { top: 12px; }
+
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 4px; }
+
+/* ------------------------------------------------------------- cabeçalho -- */
+.masthead {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.masthead-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; min-height: 74px; padding-top: 13px; padding-bottom: 13px;
+  flex-wrap: wrap;
+}
+.masthead-id { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.masthead-logo { display: block; width: 122px; height: auto; flex: none; }
+.masthead-divider {
+  width: 1px; align-self: stretch; margin: 4px 0;
+  background: var(--line); flex: none;
+}
+.masthead h1 {
+  font-size: 19px; font-weight: 600; letter-spacing: -.018em; line-height: 1.25;
+}
+.masthead-sub { font-size: 12.5px; color: var(--gray-text); margin-top: 1px; }
+
+.masthead-actions { display: flex; align-items: center; gap: 12px; }
+
+.source-chip {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 6px 13px; border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: #FBFCFC;
+}
+.source-chip-label {
+  font-size: 9px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gray-text);
+}
+.source-chip-value { font-size: 12px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+
+.btn-refresh {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px;
+  background: var(--card); color: var(--teal-dark);
+  border: 1px solid var(--teal-line); border-radius: var(--r-sm);
+  font-size: 13.5px; font-weight: 600; white-space: nowrap;
+  transition: background .15s ease, border-color .15s ease;
+}
+.btn-refresh:hover:not(:disabled) { background: var(--teal-tint); border-color: var(--teal); }
+.btn-refresh:disabled { opacity: .6; cursor: progress; }
+.btn-refresh.is-busy svg { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------------------------------------------------------------- avisos -- */
+main { padding: 26px 0 60px; }
+
+.notice {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 16px; margin-bottom: 22px;
+  border: 1px solid var(--line); border-left-width: 3px;
+  border-radius: var(--r-sm); background: var(--card);
+  font-size: 13.5px; box-shadow: var(--shadow-sm);
+}
+.notice-body { flex: 1; min-width: 0; }
+.notice-body strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 1px; }
+.notice-body span { color: var(--ink-2); }
+
+/* O ícone é um glifo textual: a informação não depende só de cor (§24). */
+.notice-icon { font-weight: 700; font-size: 15px; line-height: 1.45; flex: none; }
+.notice-icon::before { content: 'i'; }
+
+.notice.is-info { border-color: var(--teal-line); border-left-color: var(--teal); background: var(--teal-tint); }
+.notice.is-info .notice-icon { color: var(--teal-dark); }
+
+.notice.is-warn { border-color: #EBD9AE; border-left-color: var(--warn); background: var(--warn-tint); }
+.notice.is-warn .notice-icon { color: var(--warn); }
+.notice.is-warn .notice-icon::before { content: '!'; }
+
+.notice.is-error { border-color: #F0CFCC; border-left-color: var(--danger); background: var(--danger-tint); }
+.notice.is-error .notice-icon { color: var(--danger); }
+.notice.is-error .notice-icon::before { content: '!'; }
+
+.notice-action {
+  flex: none; align-self: center; height: 34px; padding: 0 14px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.notice-action:hover { border-color: var(--gray); }
+
+/* ---------------------------------------------------------------- layout -- */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 336px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* =========================================================================
+   CALCULADORA — o elemento principal da página (§13, §28)
+   ========================================================================= */
+.calc {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+/* Fio turquesa no topo: a marca presente sem pesar. */
+.calc::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: linear-gradient(90deg, var(--teal) 0%, var(--teal) 62%, var(--orange) 62%, var(--orange) 100%);
+}
+.calc.is-disabled { opacity: .6; }
+
+label, .field-label {
+  display: block; font-size: 12px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--gray-text);
+  margin-bottom: 7px;
+}
+
+/* ---------------------------------------------------- campo de valor (§7) -- */
+.field-amount { margin-bottom: 18px; }
+
+.amount-box {
+  display: flex; align-items: center; gap: 10px;
+  height: 66px; padding: 0 14px 0 16px;
+  background: #FBFCFD;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r);
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.amount-box:focus-within {
+  border-color: var(--teal); background: var(--card);
+  box-shadow: 0 0 0 4px rgba(0,118,129,.12);
+}
+.amount-symbol {
+  font-family: var(--font-num); font-size: 19px; font-weight: 500;
+  color: var(--gray-text); flex: none; min-width: 30px;
+}
+#amount {
+  flex: 1; min-width: 0; height: 100%;
+  border: 0; background: none; outline: none;
+  font-family: var(--font-num); font-size: 30px; font-weight: 500;
+  letter-spacing: -.01em; color: var(--ink);
+}
+#amount::placeholder { color: #B6BEC1; font-weight: 400; }
+#amount:disabled { cursor: not-allowed; }
+
+.amount-clear {
+  flex: none; display: grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 0; background: #EDF1F2; color: var(--gray-text);
+  transition: background .14s ease, color .14s ease;
+}
+.amount-clear:hover { background: #E2E8EA; color: var(--ink); }
+
+.field-hint { font-size: 12px; color: var(--gray-text); margin-top: 7px; }
+
+/* ------------------------------------------- moedas e inversão (§5, §6) -- */
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px; align-items: end;
+  margin-bottom: 20px;
+}
+.pair-field { min-width: 0; }
+
+.select-box { position: relative; }
+.select-box select {
+  width: 100%; height: 52px; padding: 0 38px 0 14px;
+  background: var(--card); border: 1.5px solid var(--line);
+  border-radius: var(--r); font-size: 14.5px; font-weight: 500;
+  appearance: none; -webkit-appearance: none;
+  cursor: pointer; text-overflow: ellipsis;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.select-box select:hover:not(:disabled) { border-color: var(--teal-line); }
+.select-box select:focus-visible {
+  border-color: var(--teal); outline: none;
+  box-shadow: 0 0 0 4px rgba(0,118,129,.12);
+}
+.select-caret {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--gray-text); pointer-events: none;
+}
+
+.swap {
+  display: grid; place-items: center;
+  width: 46px; height: 46px; margin-bottom: 3px;
+  border-radius: 50%;
+  background: var(--teal); color: #fff; border: 0;
+  box-shadow: 0 2px 6px rgba(0,118,129,.28);
+  transition: background .15s ease, transform .15s ease;
+}
+.swap:hover:not(:disabled) { background: var(--teal-dark); transform: translateY(-1px); }
+.swap:active:not(:disabled) { transform: translateY(0); }
+.swap.is-spun svg { animation: swap-turn .34s ease; }
+@keyframes swap-turn {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(180deg); }
+}
+
+/* ------------------------------------------------------- botão converter -- */
+.btn-convert {
+  width: 100%; height: 56px;
+  background: var(--orange); color: #fff; border: 0;
+  border-radius: var(--r);
+  /* 19px/700 qualifica como texto grande: AA pede 3:1, o par rende 3,1:1. */
+  font-size: 19px; font-weight: 700; letter-spacing: .01em;
+  box-shadow: 0 2px 6px rgba(229,114,0,.26);
+  transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
+}
+.btn-convert:hover:not(:disabled) {
+  background: var(--orange-dark); box-shadow: 0 3px 10px rgba(229,114,0,.32);
+}
+.btn-convert:active:not(:disabled) { transform: translateY(1px); }
+.btn-convert:disabled { background: var(--gray); box-shadow: none; cursor: not-allowed; }
+
+/* ---------------------------------------------------------- resultado (§8) -- */
+.result {
+  margin-top: 22px; padding: 26px 24px;
+  border-radius: var(--r);
+  background: var(--teal-tint);
+  border: 1px solid var(--teal-line);
+  text-align: center;
+  transition: background .2s ease, border-color .2s ease;
+}
+.result.has-value {
+  background: linear-gradient(160deg, var(--teal-dark) 0%, var(--teal-deeper) 100%);
+  border-color: var(--teal-deeper);
+}
+
+.result-empty { font-size: 14.5px; color: var(--ink-2); padding: 12px 0; }
+
+.result-source {
+  font-family: var(--font-num); font-size: 16px; font-weight: 400;
+  color: rgba(255,255,255,.78);
+}
+.result-arrow { display: block; color: rgba(255,255,255,.5); margin: 2px 0; }
+
+.result-value {
+  font-family: var(--font-num);
+  font-size: clamp(34px, 6.4vw, 52px);
+  font-weight: 600; letter-spacing: -.022em; line-height: 1.12;
+  color: #fff;
+  word-break: break-word;
+}
+.result-value.is-updated { animation: result-in .4s cubic-bezier(.2,.8,.3,1); }
+@keyframes result-in {
+  from { opacity: .35; transform: translateY(5px) scale(.985); }
+  to   { opacity: 1;   transform: none; }
+}
+
+/* A cotação utilizada é a segunda informação mais importante da tela (§28). */
+.result-rate {
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,.18);
+}
+.result-rate-label {
+  display: block; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  /* .68 rendia 4,39:1 sobre a parada mais clara do gradiente — abaixo da AA
+     para texto pequeno. .82 leva a 5,4:1 sem perder a hierarquia. */
+  color: rgba(255,255,255,.82); margin-bottom: 5px;
+}
+.result-rate-value {
+  display: block; font-family: var(--font-num);
+  font-size: 17px; font-weight: 500; color: #fff;
+}
+.result-rate-note {
+  display: block; font-family: var(--font-num);
+  font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 6px;
+}
+
+.btn-copy {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 18px; height: 38px; padding: 0 16px;
+  background: rgba(255,255,255,.1); color: #fff;
+  border: 1px solid rgba(255,255,255,.34); border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 600;
+  transition: background .15s ease, border-color .15s ease;
+}
+.btn-copy:hover { background: rgba(255,255,255,.2); }
+.btn-copy:focus-visible { outline-color: #fff; }
+.btn-copy.is-done { background: #fff; color: var(--teal-dark); border-color: #fff; }
+.btn-copy.is-failed { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.6); }
+
+/* =========================================================================
+   COLUNA LATERAL
+   ========================================================================= */
+.side { display: flex; flex-direction: column; gap: 18px; }
+
+/* ------------------------------------------- painel de cotações (§3, §11) -- */
+.rates {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); box-shadow: var(--shadow-sm);
+  padding: 20px;
+}
+.rates-head { margin-bottom: 14px; }
+.rates h2 { font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; }
+.rates-sub {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--teal-dark); margin-top: 3px;
+}
+
+.rates-list { display: flex; flex-direction: column; gap: 10px; }
+
+.rate-card {
+  border: 1px solid var(--line-soft); border-radius: var(--r-sm);
+  background: #FBFCFD; padding: 14px 16px;
+}
+.rate-card.is-empty { background: var(--paper); }
+
+.rate-card-head { display: flex; align-items: baseline; gap: 8px; }
+.rate-code {
+  font-family: var(--font-num); font-size: 13px; font-weight: 600;
+  color: var(--teal-dark); letter-spacing: .04em;
+}
+.rate-name { font-size: 12.5px; color: var(--gray-text); }
+
+.rate-value {
+  font-family: var(--font-num); font-size: 25px; font-weight: 600;
+  letter-spacing: -.02em; color: var(--ink); margin-top: 6px; line-height: 1.15;
+}
+.rate-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--orange-deep); margin-top: 2px;
+}
+.rate-card.is-empty .rate-label { color: var(--gray-text); }
+
+.rate-date { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.rate-date-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 4px;
+  background: var(--warn-tint); color: var(--warn); border: 1px solid #EBD9AE;
+}
+.rate-date-badge.is-today {
+  background: var(--teal-tint); color: var(--teal-dark); border-color: var(--teal-line);
+}
+.rate-date-value { font-family: var(--font-num); font-size: 12.5px; color: var(--gray-text); }
+
+.rates-foot {
+  font-size: 11.5px; color: var(--gray-text); margin-top: 13px;
+  padding-top: 11px; border-top: 1px solid var(--line-soft);
+}
+
+/* ------------------------------------------------ conversões recentes (§18) -- */
+.history {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); box-shadow: var(--shadow-sm);
+  padding: 20px;
+}
+.history-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px;
+}
+.history h2 { font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; }
+
+.btn-link {
+  background: none; border: 0; padding: 0;
+  font-size: 12.5px; font-weight: 600; color: var(--teal-dark);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.btn-link:hover { color: var(--teal-deeper); }
+
+.history-list { display: flex; flex-direction: column; }
+.history-item {
+  position: relative;
+  padding: 11px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.history-item:first-child { border-top: 0; padding-top: 2px; }
+
+.history-when { font-size: 11.5px; color: var(--gray-text); }
+.history-pair {
+  font-family: var(--font-num); font-size: 11.5px; font-weight: 600;
+  color: var(--teal-dark); letter-spacing: .04em; margin-top: 1px;
+}
+.history-values {
+  font-family: var(--font-num); font-size: 13.5px; color: var(--ink);
+  margin-top: 3px; word-break: break-word;
+}
+
+/* Área clicável cobrindo a linha inteira, sem aninhar botão em texto. */
+.history-reuse {
+  position: absolute; inset: 0;
+  background: none; border: 0; border-radius: var(--r-sm);
+}
+.history-reuse:hover { background: rgba(0,118,129,.05); }
+/* O botão cobre a linha inteira e não tem texto próprio: o foco precisa
+   desenhar a moldura por dentro, senão ele invadiria as linhas vizinhas. */
+.history-reuse:focus-visible {
+  outline: 2px solid var(--teal); outline-offset: -2px;
+  background: rgba(0,118,129,.05);
+}
+
+.history-empty { font-size: 13px; color: var(--gray-text); }
+
+/* ---------------------------------------------------------------- rodapé -- */
+.footer { border-top: 1px solid var(--line); background: var(--card); }
+.footer-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; padding-top: 18px; padding-bottom: 18px;
+}
+.footer-source { font-size: 12.5px; color: var(--gray-text); }
+.footer-source strong { color: var(--ink-2); font-weight: 600; }
+.footer-stamp { font-size: 12.5px; color: var(--gray-text); font-family: var(--font-num); }
+
+/* =========================================================================
+   RESPONSIVIDADE (§14)
+   ========================================================================= */
+
+/* Tablet e notebooks estreitos: a lateral desce e vira duas colunas. */
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .rates-list { flex-direction: row; }
+  .rates-list .rate-card { flex: 1; }
+}
+
+/* Celular: tudo empilhado, controles maiores para o toque. */
+@media (max-width: 720px) {
+  .wrap { padding: 0 16px; }
+
+  /* Só as medidas verticais: o recuo lateral vem de .wrap. */
+  .masthead-inner {
+    min-height: 0; gap: 10px; flex-wrap: nowrap;
+    padding-top: 10px; padding-bottom: 10px;
+  }
+  .masthead-id { gap: 11px; flex: 1; }
+  .masthead-logo { width: 92px; }
+  .masthead h1 { font-size: 16px; }
+  .masthead-sub { display: none; }
+
+  /* A fonte dos dados continua explícita no painel de cotações e no rodapé;
+     no celular o espaço vale mais para a calculadora. */
+  .source-chip { display: none; }
+
+  /* O botão vira só o ícone para o título caber em uma linha. O rótulo
+     continua no leitor de tela, e o ícone girando avisa que está consultando. */
+  .masthead-actions { gap: 8px; flex: none; }
+  .btn-refresh { padding: 0 11px; }
+  .btn-refresh #refreshLabel {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  main { padding: 18px 0 40px; }
+
+  .side { grid-template-columns: minmax(0, 1fr); }
+  .rates-list { flex-direction: column; }
+
+  .calc { padding: 20px 16px; border-radius: var(--r); }
+
+  /* O botão de inversão passa a ficar entre os campos empilhados. */
+  .pair {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px; justify-items: stretch;
+  }
+  /* O ⇅ permanece na vertical: com os campos empilhados, é exatamente o
+     sentido da troca — e é o símbolo que o usuário reconhece como "inverter". */
+  .swap {
+    justify-self: center; margin: 2px 0;
+    width: 48px; height: 48px;      /* alvo de toque confortável */
+  }
+
+  .amount-box { height: 60px; }
+  #amount { font-size: 26px; }
+
+  .btn-convert { height: 54px; }
+
+  .result { padding: 22px 16px; }
+  .result-value { font-size: clamp(30px, 9vw, 42px); }
+
+  .footer-inner { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+
+/* Telas muito estreitas (360px e abaixo). */
+@media (max-width: 380px) {
+  #amount { font-size: 23px; }
+  .amount-symbol { font-size: 17px; min-width: 26px; }
+  .rate-value { font-size: 22px; }
+}
+
+/* Respeita quem pediu menos animação no sistema (§24). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* Impressão: o essencial, sem cor de fundo. */
+@media print {
+  .masthead-actions, .btn-convert, .btn-copy, .swap, .amount-clear,
+  .history, .notice-action, .skip-link { display: none !important; }
+  body { background: #fff; }
+  .result.has-value { background: #fff; border: 1px solid #999; }
+  .result-value, .result-source, .result-rate-value, .result-rate-note { color: #000; }
+  .result-rate-label { color: #444; }
+  .layout { grid-template-columns: 1fr; }
+}

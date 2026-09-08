@@ -1,0 +1,21 @@
+# Normalização de fim de linha.
+#
+# O projeto é editado no Windows (CRLF) e versionado no GitHub. Sem isto, um
+# editor diferente pode reescrever o arquivo inteiro só trocando as quebras de
+# linha, e o diff fica ilegível.
+#
+# Regra: tudo é guardado no repositório com LF; cada máquina recebe o formato
+# que lhe convém ao clonar.
+
+* text=auto eol=lf
+
+# O PowerShell é executado no Windows: mantém CRLF na cópia de trabalho.
+*.ps1 text eol=crlf
+
+# Binários: nunca converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
