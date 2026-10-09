@@ -17,6 +17,7 @@
     stale: false,       // dados vindos de cache porque a fonte falhou
     missing: [],        // moedas que a fonte não retornou
     loadError: null,    // 'network' | 'empty' | null
+    loadStatus: null,   // status HTTP da falha, quando a fonte respondeu algo
     loading: false,
     from: CFG.DEFAULT_FROM,
     to: CFG.DEFAULT_TO,
@@ -391,9 +392,15 @@
     // 1. Não há cotação nenhuma: o mais grave.
     if (!state.rates) {
       if (state.loading) { hideNotice(); return; }
-      showNotice('error', 'Não foi possível obter as cotações.',
-        'Não foi possível atualizar as cotações do Banco Central. ' +
-        'Verifique sua conexão ou tente novamente.', true);
+      // Quando o servidor respondeu algo (um status HTTP), mandar o usuário
+      // "verificar a conexão" seria enganoso: a conexão está boa, quem
+      // recusou foi a fonte.
+      var texto = state.loadStatus
+        ? 'O serviço de cotações do Banco Central não respondeu como esperado. ' +
+          'Tente novamente em alguns minutos.'
+        : 'Não foi possível atualizar as cotações do Banco Central. ' +
+          'Verifique sua conexão ou tente novamente.';
+      showNotice('error', 'Não foi possível obter as cotações.', texto, true);
       return;
     }
 
@@ -550,12 +557,29 @@
         state.stale = res.stale;
         state.missing = res.missing || [];
         state.loadError = null;
+
+        // O usuário não vê diferença quando o plano B funciona — e não
+        // precisa ver. Mas fica o registro: se a consulta normal passou a
+        // falhar, alguém que abrir o console descobre antes de virar
+        // incidente. Foi assim que o $select barrado derrubou a ferramenta.
+        if (res.viaFallback) {
+          console.warn(
+            '[cotações] A consulta completa ao Banco Central falhou; os valores ' +
+            'vieram da consulta simplificada. A ferramenta está correta, mas vale ' +
+            'verificar se a API mudou. Ver src/bcb-service.js.'
+          );
+        }
       })
       .catch(function (err) {
         state.rates = null;
         state.stale = false;
         state.missing = [];
         state.loadError = (err && err.kind) || 'network';
+        state.loadStatus = err && err.status;
+
+        // Detalhe técnico fica no console, não na tela (§20).
+        console.warn('[cotações] Falha ao consultar o Banco Central.',
+          state.loadStatus ? 'HTTP ' + state.loadStatus : 'sem resposta do servidor');
       })
       .then(function () {
         setLoading(false);

@@ -86,6 +86,15 @@
     /** Campo da resposta com a data/hora do boletim. */
     DATE_FIELD: 'dataHoraCotacao',
 
+    /**
+     * Campo que diz qual boletim é o registro.
+     * A API devolve vários por dia (Abertura, Intermediário, Fechamento) com
+     * valores diferentes — em 09/10/2026 o dólar abriu a 5,0018 e fechou a
+     * 4,9892. Só o Fechamento é a PTAX oficial, e o filtro por este campo é
+     * conferido no cliente, não confiado ao servidor.
+     */
+    BULLETIN_FIELD: 'tipoBoletim',
+
     CURRENCIES: CURRENCIES,
 
     /** Ordem de exibição nos seletores e no painel de cotações. */

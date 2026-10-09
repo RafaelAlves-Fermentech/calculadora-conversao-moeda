@@ -144,10 +144,12 @@ CotacaoMoedaPeriodo(moeda=@moeda,dataInicial=@dataInicial,dataFinalCotacao=@data
 | `@dataInicial` | hoje menos 15 dias, no formato `MM-DD-YYYY` |
 | `@dataFinalCotacao` | hoje, no formato `MM-DD-YYYY` |
 | `$filter` | `tipoBoletim eq 'Fechamento'` |
-| `$select` | `cotacaoVenda,dataHoraCotacao` |
 | `$orderby` | `dataHoraCotacao desc` |
 | `$top` | `1` |
 | `$format` | `json` |
+
+> Não há `$select`. Ele existia até 09/10/2026, quando o Banco Central passou a
+> recusar essa opção — ver [Incidente de 09/10/2026](#incidente-de-09102026).
 
 `CotacaoMoedaPeriodo` foi escolhido em vez de `CotacaoDolarPeriodo` porque aceita
 o parâmetro `moeda` — atendendo às duas moedas pelo mesmo caminho — e expõe
@@ -159,7 +161,10 @@ oficial do dia.
 ```json
 {
   "value": [
-    { "cotacaoVenda": 5.08560, "dataHoraCotacao": "2026-09-08 13:02:38.447299" }
+    { "paridadeCompra": 1.0, "paridadeVenda": 1.0,
+      "cotacaoCompra": 4.98860, "cotacaoVenda": 4.98920,
+      "dataHoraCotacao": "2026-10-09 13:07:30.746597",
+      "tipoBoletim": "Fechamento" }
   ]
 }
 ```
@@ -167,18 +172,34 @@ oficial do dia.
 | Campo | Significado |
 |---|---|
 | `cotacaoVenda` | **A cotação de venda.** É o único valor usado nos cálculos. |
+| `cotacaoCompra` | Cotação de compra. **Ignorada.** |
 | `dataHoraCotacao` | Data e hora do boletim. A data sai dos 10 primeiros caracteres. |
+| `tipoBoletim` | Qual boletim é o registro. Só `Fechamento` interessa. |
 
 ### Somente a cotação de venda
 
-O campo `cotacaoCompra` **não é sequer pedido ao servidor**: o `$select` traz
-apenas `cotacaoVenda` e `dataHoraCotacao`. Não existe caminho no código por onde
-um valor de compra possa entrar — a palavra "compra" aparece no código-fonte
-somente em comentários.
+Até 09/10/2026 a garantia era estrutural: o `$select` impedia a cotação de
+compra de sair do servidor. Com o `$select` recusado pela fonte, ela passou a
+chegar junto na resposta — e **a garantia passou a ser do código**.
 
-Exemplo verificado em 08/09/2026: o boletim do dólar trazia
-`cotacaoCompra = 5,08500` e `cotacaoVenda = 5,08560`. A calculadora usa
-**5,0856**.
+`pickLatestClosing()`, em `src/bcb-service.js`, lê exclusivamente
+`cotacaoVenda`. Em nenhum ponto do sistema `cotacaoCompra` é lida: o valor
+trafega na resposta e é descartado. Fora desse arquivo, a palavra "compra" não
+aparece no código.
+
+Exemplo verificado em 09/10/2026: o boletim do dólar trazia
+`cotacaoCompra = 4,98860` e `cotacaoVenda = 4,98920`. A calculadora usa
+**4,9892**.
+
+### O boletim certo
+
+A API devolve **vários boletins por dia, com valores diferentes**. Em 09/10/2026
+o dólar teve Abertura 5,00180, seis Intermediários e Fechamento 4,98920. Pegar o
+registro errado daria uma cotação errada — e plausível, que é pior.
+
+Por isso o filtro por `tipoBoletim` e a escolha do mais recente são **sempre
+refeitos no cliente**, mesmo quando o servidor já filtrou e ordenou. O que vem
+do servidor é tratado como sugestão; a conferência é nossa.
 
 ### CORS
 
@@ -187,8 +208,62 @@ Verificado em 08/09/2026: o servidor do Banco Central responde com
 existe backend, proxy ou camada intermediária** — o navegador fala direto com o
 Banco Central, e a fonte permanece sendo a fonte oficial, sem intermediários.
 
+Confirmado também a partir do domínio de produção, não só de `localhost`.
+
 Se um dia essa política mudar, o único arquivo a adaptar é `src/bcb-service.js`,
 que é o único ponto do sistema que acessa a rede.
+
+### Incidente de 09/10/2026
+
+**Sintoma.** A calculadora parou de carregar cotações e passou a exibir "Não foi
+possível obter as cotações".
+
+**Causa.** O Banco Central passou a responder **HTTP 403 Forbidden** — com uma
+página HTML de erro, não JSON — a qualquer requisição que use `$select`. Foi
+isolado testando as opções uma a uma: `$filter`, `$orderby` e `$top` continuavam
+respondendo 200; só `$select` falhava, com qualquer campo pedido e com a vírgula
+codificada ou não. Como o 403 vinha sem cabeçalho `Access-Control-Allow-Origin`,
+o navegador ainda registrava o erro como falha de CORS, o que mascarava a causa
+real.
+
+**Correção.** O `$select` foi removido. Ele era só economia de banda — pedia ao
+servidor os dois campos usados em vez da linha inteira.
+
+**O que mudou junto.** Sem `$select`, a resposta passou a trazer `cotacaoCompra`.
+Ver [Somente a cotação de venda](#somente-a-cotação-de-venda).
+
+### Resiliência: duas tentativas
+
+O incidente mostrou que as opções OData do servidor são terreno movediço: são
+comodidade, não necessidade. Por isso cada consulta agora tem um plano B.
+
+| | Consulta |
+|---|---|
+| **1ª tentativa** | Completa, com `$filter`, `$orderby` e `$top` |
+| **2ª tentativa** | Mínima: só a moeda, o período e `$format=json` |
+
+A segunda só dispara se a primeira falhar. **Se amanhã o Banco Central recusar
+`$filter` ou `$orderby` como recusou `$select`, a calculadora continua
+funcionando** — foi testado simulando exatamente esse cenário.
+
+O preço é baixar alguns registros a mais numa situação de exceção. A escolha do
+boletim certo não depende disso: é sempre feita no cliente.
+
+Quando o plano B é usado, um aviso vai para o console do navegador. O usuário
+não vê diferença — e não precisa ver — mas quem abrir o console descobre que a
+consulta normal está falhando **antes de virar incidente**.
+
+### Se voltar a acontecer
+
+Rode o diagnóstico:
+
+```bash
+powershell -ExecutionPolicy Bypass -File diagnostico.ps1
+```
+
+Ele testa as opções da consulta uma a uma e diz em segundos se o problema é
+falta de internet, o serviço fora do ar, ou mais uma opção recusada — apontando
+qual. Se for esse último caso, remova a opção de `src/bcb-service.js`.
 
 ### Dias sem cotação
 
@@ -371,6 +446,36 @@ Apenas `src/converter.js`.
 Os tokens de cor e tipografia estão no topo de `assets/styles.css`.
 
 ---
+
+## Verificações da correção de 09/10/2026
+
+**Causa isolada** — as cinco opções da consulta testadas uma a uma contra a API
+real: só `$select` devolvia 403, com qualquer campo e qualquer codificação.
+
+**Correção** — consulta sem `$select` respondendo 200, com CORS liberado para o
+domínio de produção, trazendo o boletim de 09/10/2026 (USD venda 4,9892 / EUR
+venda 5,5844).
+
+**Plano B** — simulado o Banco Central recusando toda consulta com opções OData:
+a calculadora caiu sozinha na consulta mínima, obteve as cotações corretas e
+seguiu funcionando, sem erro na tela.
+
+**O boletim certo** — 16 casos sobre a seleção do registro, com a resposta real
+de um dia inteiro fora de ordem cronológica: escolhe o Fechamento mais recente e
+nunca a Abertura (5,0018), o Intermediário (4,9912), o Fechamento da véspera
+(5,0106) nem a **cotação de compra** (4,9886). Mais os degenerados: lista vazia,
+resposta sem `value`, venda zero, negativa, como texto, ausente, e data inválida
+— todos devolvem "sem dado" em vez de um número plausível.
+
+**Mensagens** — fonte recusando (403) fala da fonte; sem conexão fala da
+conexão; nos dois casos a calculadora bloqueia e **nenhuma cotação é inventada**.
+Recuperação conferida.
+
+**Sem regressão** — as 7 conversões e a máscara do campo reconferidas com as
+cotações de hoje.
+
+**Diagnóstico** — `diagnostico.ps1` executado: aponta o `$select` como a única
+opção recusada e confirma a consulta atual em 200.
 
 ## Verificações realizadas
 
